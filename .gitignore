@@ -1,0 +1,17 @@
+# .gitignore
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+.demo1_env/
+
+# Zip files or other outputs
+*.zip
+
+# Logs
+logs/
