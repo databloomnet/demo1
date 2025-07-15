@@ -97,7 +97,7 @@ def query_chatgpt():
             openai_api_key = tmp_key
 
 
-    print("openai_api_key>", openai_api_key, "<")
+    # print("openai_api_key>", openai_api_key, "<")
     response = None
     error = None
     intro_title = "This page allows you to ask ChatGPT a single question using your own OpenAI api key.  Please note:"
@@ -179,15 +179,144 @@ def query_chatgpt():
 
 
 
+
+@main_bp.route("/converse_chatgpt", methods=["GET", "POST"])
+def converse_chatgpt():
+    openai_api_key = ""
+    openai_api_key_saved = False
+    
+    if config.GLOBAL_OPENAI_API_KEY in current_app.config:
+        tmp_key = current_app.config[config.GLOBAL_OPENAI_API_KEY]
+        if tmp_key != "":
+            #if config.GLOBAL_OPENAI_API_KEY != "":            
+            print("using global_openai_api_key")
+            openai_api_key_saved = True
+            openai_api_key = tmp_key
+
+    if config.SESSION_OPENAI_API_KEY in session:
+        tmp_key = session[config.SESSION_OPENAI_API_KEY]
+        if tmp_key != "":            
+            print("using session_openai_api_key")
+            openai_api_key_saved = True
+            openai_api_key = tmp_key
+
+
+    print("openai_api_key>", openai_api_key, "<")
+    response = None
+    error = None
+    intro_title = "This page allows you to hold a conversation with ChatGPT using your own OpenAI api key.  Please note:"
+    intro_bullets = current_app.config[config.WARNING_BULLETS]
+
+
+
+    default_prompt = "Please describe me in a haiku.  You can ask questions, but end each response with a haiku.  Try to use all the info you learn about me in the haiku."
+    # user_prompt = default_prompt
+
+    chat_history = session.get("chat_history", [])
+    if len(chat_history) == 0:
+        user_prompt = default_prompt
+    else:
+        user_prompt = "any other thoughts?"
+    message_footer = ""
+
+    print("222")
+    print("user_prompt", user_prompt)
+    print("chat_history", chat_history)
+
+    if request.method == "POST":
+        if not openai_api_key_saved:
+            user_key = request.form.get("api_key", "").strip()
+            print("user provided key:", user_key)
+            if user_key != "":
+                print("saving user provided key as session key")
+                session[config.SESSION_OPENAI_API_KEY] = user_key
+                openai_api_key = session[config.SESSION_OPENAI_API_KEY]
+                openai_api_key_saved = True
+ 
+
+        user_prompt = request.form.get("user_prompt", "").strip()
+        #completion_full = False
+
+        t0 = time.time()
+        # print(len(user_prompt))
+
+        if not openai_api_key_saved and not openai_api_key:
+            error = "oops - I need a key"
+        elif not user_prompt:
+            error = "prompt can't be empty"
+        elif len(user_prompt) > 300:
+            error = "prompt too long - I'm cheap"
+        else:
+            try:
+                if len(chat_history) == 0:                    
+                    chat_history.append( {"role": "system",
+                        "content": "You are a helpful assistant.  If anyone uses any very inappropriate langauge you will respond with this exact phrase: \'I decline to engage in such rude discussion\'"} )
+                    #chat_history.append( {"role": "user",
+                    #    "content": "How would you describe me in a haiku?  You can ask questions to get to know me better."} )
+                    print("blank chat_history is now:", chat_history)
+                chat_history.append( {"role": "user", "content": user_prompt} )
+
+
+                client = openai.OpenAI(api_key=openai_api_key)
+                completion = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=chat_history,
+                    response_format={"type": "text"}  # works
+                )
+
+                completion_full = completion
+                response = completion.choices[0].message.content
+                chat_history.append({"role": "assistant", "content": response})
+
+                session["chat_history"] = chat_history
+                #session["chat_timestamp"] = now.isoformat()
+                session["chat_timestamp"] = datetime.utcnow().isoformat()
+
+                user_prompt = "any other thoughts?"
+
+                #message_footer = f"\nResponded in {time.time() - t0:.1f} seconds using gpt-3.5-turbo"
+                print("response", response)
+
+            except Exception as e:
+                try:
+                    # Try to parse the error and look for OpenAI-style structured error
+                    error_json = e.response.json()
+                    if error_json.get("error", {}).get("code") == "invalid_api_key":
+                        error = "Invalid API key. Please double-check and try again."
+                    else:
+                        error = f"OpenAI Error: {error_json.get('error', {}).get('message', str(e))}"
+                except:
+                    # Fallback if it's not a typical OpenAI response
+                    error = f"Unexpected error: {str(e)}"
+
+        message_footer = ""
+        if completion_full:
+            message_footer = "\n\tAnalysis:"
+            message_footer += "\n\tResponded with {:d} words in in {:.1f}s".format( len(response.split()), time.time() - t0 )
+
+            message_footer += "\n\tUsed {:d} prompt tokens and {:d} completion tokens for {:d} total tokens".format(completion_full.usage.prompt_tokens,
+                completion_full.usage.completion_tokens, completion_full.usage.prompt_tokens + completion_full.usage.completion_tokens)
+            print("message_footer:", message_footer)
+
+    return render_template("converse_chatgpt.html", 
+                intro_title=intro_title,
+                intro_bullets=intro_bullets,
+                response=response,
+                error=error,
+                openai_api_key=openai_api_key,
+                user_prompt=user_prompt,
+                message_footer = message_footer,
+                api_key_saved=openai_api_key_saved,
+                chat_history = chat_history[1:])  # leave out the system message in chat history
+
 @main_bp.route("/talk_to_bedrock")
 def talk_to_bedrock():
     return render_template("coming_soon.html", label="AWS Bedrock")
 
 
 
-
-@main_bp.route("/converse_chatgpt", methods=["GET", "POST"])
-def converse_chatgpt():
+@main_bp.route("/converse_chatgptOLD", methods=["GET", "POST"])
+def converse_chatgptOLD():
     now = datetime.utcnow()
 
     # Reset chat if older than 5 minutes or not initialized
