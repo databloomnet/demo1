@@ -1,6 +1,6 @@
 <h2>Welcome to the Flask App</h2>
 <form action="/submit_note" method="post">
-    <label>Leave a note:</label>
+    <label>Leave a note in the app log:</label>
     <input type="text" name="note" required>
     <button type="submit">Submit</button>
 </form>
@@ -10,18 +10,8 @@
     <a href="/app_log">View App Log</a>
 </p>
 #}
-<hr>
 
 
-{#
-<a href="/sys_log">
-    <button type="button">View System Log</button>
-</a>
-
-<a href="/app_log">
-    <button type="button">View App Log</button>
-</a>
-#}
 
 <form action="/sys_log" method="get" style="display:inline;">
     <button type="submit">View System Log</button>
@@ -43,18 +33,28 @@
 <hr>
 
 
-<form action="/talk_to_claude" method="get" class="inline-button-form">
-    <button type="submit">Talk to Claude</button>
+<form action="/query_claude" method="get" style="display:inline; margin-left: 10px;">
+    <button type="submit">Query Claude</button>
 </form>
 
-<form action="/query_chatgpt" method="get" class="inline-button-form">
+<form action="/query_chatgpt" method="get" style="display:inline; margin-left: 10px;">
     <button type="submit">Query ChatGPT</button>
 </form>
 
-<form action="/converse_chatgpt" method="get" class="inline-button-form">
+<p>
+
+<form action="/converse_claude" method="get" style="display:inline; margin-left: 10px;">
+    <button type="submit">Converse with Claude</button>
+</form>
+
+
+<form action="/converse_chatgpt" method="get" style="display:inline; margin-left: 10px;">
     <button type="submit">Converse with ChatGPT</button>
 </form>
 
+
+
+<p>
 <form action="/talk_to_bedrock" method="get" class="inline-button-form">
     <button type="submit">Talk to AWS Bedrock</button>
 </form>

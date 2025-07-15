@@ -67,8 +67,11 @@ if __name__ == "__main__":
         
         # ONLY SOMETIMES USE THE BELOW
         app.config[config.GLOBAL_OPENAI_API_KEY] = os.environ.get("OPENAI_API_KEY")
+        app.config[config.GLOBAL_CLAUDE_API_KEY] = os.environ.get("ANTHROPIC_API_KEY")
         
-        #print("KEY:", app.config[config.GLOBAL_OPENAI_API_KEY])
+        #print("openai key:", app.config[config.GLOBAL_OPENAI_API_KEY])
+        #print("claude key:", app.config[config.GLOBAL_CLAUDE_API_KEY])
+
     app.run(host="0.0.0.0", port=port, debug=True) # debug=True will have app restart if any code changes
 
 

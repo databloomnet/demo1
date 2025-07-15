@@ -1,4 +1,4 @@
-<h2>Converse with ChatGPT</h2>
+<h2>Converse with Claude</h2>
 
 <p>This session will reset after 1 minute of inactivity (not yet implemented).</p>
 
@@ -12,25 +12,25 @@
 <form method="post">
 	{# nothing #}
 	{#
-	<label for="api_key">OpenAI api key:</label><br>
+	<label for="api_key">Anthropic api key:</label><br>
 	<input type="text" name="api_key" id="api_key"
-	       value="{{ openai_api_key }}"
-	       placeholder="sk-..." style="width: 400px;"><br><br>
+	       value="{{ api_key }}"
+	       placeholder="BLARGO..." style="width: 400px;"><br><br>
 	#}
 
-	{% if api_key_saved or session.get('openai_api_key') %}
-	  <p>✅ OpenAI API key saved for this session.
+	{% if api_key_saved or session.get('api_key') %}
+	  <p>✅ Anthropic API key saved for this session.
 	    <br><a href="{{ url_for('main.forget_keys') }}" style="margin-left: 1em;">Forget all API keys</a>
-		<br><a href="{{ url_for('main.clear_chat_chatgpt') }}" style="margin-left: 1em;">Clear and Restart Conversation</a>
+		<br><a href="{{ url_for('main.clear_chat_claude') }}" style="margin-left: 1em;">Clear and Restart Conversation</a>
 	  </p>
 	  <!-- Hide input box to prevent access -->
 	{% else %}
-	  <label for="api_key">OpenAI API key:</label><br>
+	  <label for="api_key">Anthropic API key:</label><br>
 	  <input type="password" name="api_key" id="api_key" placeholder="sk-..." style="width: 400px;" required><br><br>
 	{% endif %}
 
 
-	<label for="user_prompt">Ask ChatGPT: </label><br>
+	<label for="user_prompt">Ask Claude: </label><br>
 	<textarea name="user_prompt" id="user_prompt" rows="4" style="width: 600px;" required>{{ user_prompt }}</textarea><br>
 	<button type="submit">Send</button>
 </form>
