@@ -145,6 +145,7 @@ def query_chatgpt():
 
                 completion_full = completion
                 response = completion.choices[0].message.content
+                print("response:", response)
 
             except Exception as e:
                 try:
@@ -199,7 +200,6 @@ def converse_chatgpt():
             openai_api_key = tmp_key
 
 
-    print("openai_api_key>", openai_api_key, "<")
     response = None
     error = None
     intro_title = "This page allows you to hold a conversation with ChatGPT using your own OpenAI api key.  Please note:"
@@ -217,8 +217,8 @@ def converse_chatgpt():
         user_prompt = "any other thoughts?"
     message_footer = ""
 
-    print("user_prompt", user_prompt)
-    print("chat_history", chat_history)
+    #print("user_prompt", user_prompt)
+    #print("chat_history", chat_history)
 
     if request.method == "POST":
         if not openai_api_key_saved:
@@ -247,7 +247,7 @@ def converse_chatgpt():
             try:
                 if len(chat_history) == 0:                    
                     chat_history.append({"role": "system", "content": system_content_filter})
-                    print("blank chat_history is now:", chat_history)
+                    #print("blank chat_history is now:", chat_history)
                 chat_history.append( {"role": "user", "content": user_prompt} )
 
 
@@ -269,7 +269,7 @@ def converse_chatgpt():
                 user_prompt = "any other thoughts?"
 
                 #message_footer = f"\nResponded in {time.time() - t0:.1f} seconds using gpt-3.5-turbo"
-                print("response", response)
+                print("response:", response)
 
             except Exception as e:
                 try:
@@ -381,6 +381,8 @@ def query_claude():
                 input_tokens = message.usage.input_tokens
                 output_tokens = message.usage.output_tokens
                 completion_full = message
+
+                print("response:", response)
 
             except Exception as e:
                 try:
@@ -515,7 +517,7 @@ def converse_claude():
                 user_prompt = "any other thoughts?"
 
                 #message_footer = f"\nResponded in {time.time() - t0:.1f} seconds using gpt-3.5-turbo"
-                print("response", response)
+                print("response:", response)
 
             except Exception as e:
                 try:

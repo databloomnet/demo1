@@ -32,9 +32,12 @@ default_port_local_C = 5001
 app = Flask(__name__)
 app.config[config.GLOBAL_OPENAI_API_KEY] = ""
 app.config[config.WARNING_BULLETS] = [
-    "While I don't record any api keys, this app is just a prototype and may be vulnerable to hijacking.",
-    "Do not use any high valuation keys.  I am not responsible for stolen keys.",
-    "Sessions may be intercepted, so don't share private info.  You can close session manually as needed.",
+    "This app is running on a dev server, is not hardened, and may be vulnerable.  Do not use high value keys or share private data."
+    "Any keys you enter are saved in your session only.",
+    "Prompts and responses are saved in your session only.",
+    "To be extra safe, after any conversation, click \"Clear and Restart Conversation\" to delete the conversation history from your session",
+    "Note \"query\" options do not save any history.",
+    "Some functionality is still tbd",
     "If we're acquainted, I/Jeremy would be happy to share one of my keys.",
     ]
 
