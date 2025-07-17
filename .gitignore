@@ -12,9 +12,13 @@ __pycache__/
 
 # Zip files or other outputs
 *.zip
+*.gz
 
 # Logs
 logs/
+*.log
 
 # other
 test.py
+.env
+
