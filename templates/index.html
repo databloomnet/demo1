@@ -1,19 +1,24 @@
-<h2>Welcome to Jeremy Bloom's Example App</h2>
+<h2>Jeremy Bloom's Example App</h2>
+
+
+<p>Welcome to my example app.  Some things to know:</p>
+<ul>
+  {% for item in about_bullets %}
+    <li>{{ item }}</li>
+  {% endfor %}
+</ul>
+
+
+
 <form action="/submit_note" method="post">
     <label>Leave a note in the app log:</label>
     <input type="text" name="note" required>
     <button type="submit">Submit</button>
 </form>
-{#
-<p>
-    <a href="/sys_log">View System Log</a> |
-    <a href="/app_log">View App Log</a>
-</p>
-#}
 
-
-
-<form action="/sys_log" method="get" style="display:inline;">
+<br>
+<span style="margin-left: 20px;">Logs:</span>
+<form action="/sys_log" method="get" style="display:inline; margin-left: 30px;">
     <button type="submit">View System Log</button>
 </form>
 
@@ -21,30 +26,45 @@
     <button type="submit">View App Log</button>
 </form>
 
-
-<form action="/delete_sys_log" method="post" style="display:inline;margin-left: 10px;">
+<form action="/delete_sys_log" method="post" style="display:inline;margin-left: 30px;">
     <button type="submit" onclick="return confirm('Delete system log?')">Delete System Log</button>
 </form>
 
 <form action="/delete_app_log" method="post" style="display:inline; margin-left: 10px;">
     <button type="submit" onclick="return confirm('Delete app log?')">Delete App Log</button>
 </form>
+<br><br>
 
-<hr>
+
+<br>
+
+<span style="margin-left: 20px;">Mode: <span style="font-family: monospace;">{{ current_app_mode }}</span></span>
+
+<form action="/mode_to_user_keys" method="post" style="display:inline; margin-left: 30px;">
+    <button type="submit" onclick="return confirm('Use your own keys (no rate limiting)')">Provide your own keys</button>
+</form>
+
+<form action="/mode_to_server_keys" method="post" style="display:inline; margin-left: 10px;">
+    <button type="submit" onclick="return confirm('Use Jeremy\'s but adds rate limiting')">Use Jeremy's keys</button>
+</form>
+
+<br><br>
+<span style="margin-left: 20px;">Try Anthropic API:</span>
 
 
 <form action="/query_claude" method="get" style="display:inline; margin-left: 10px;">
     <button type="submit">Query Claude</button>
 </form>
 
-<form action="/query_chatgpt" method="get" style="display:inline; margin-left: 10px;">
-    <button type="submit">Query ChatGPT</button>
-</form>
-
-<p>
-
 <form action="/converse_claude" method="get" style="display:inline; margin-left: 10px;">
     <button type="submit">Converse with Claude</button>
+</form>
+
+<br><br>
+<span style="margin-left: 20px;">Try OpenAI API:</span>
+
+<form action="/query_chatgpt" method="get" style="display:inline; margin-left: 10px;">
+    <button type="submit">Query ChatGPT</button>
 </form>
 
 
@@ -52,9 +72,11 @@
     <button type="submit">Converse with ChatGPT</button>
 </form>
 
+<br><br>
+<span style="margin-left: 20px;">Try AWS Bedrock:</span>
 
 
-<p>
+
 <form action="/talk_to_bedrock" method="get" class="inline-button-form">
     <button type="submit">Talk to AWS Bedrock</button>
 </form>

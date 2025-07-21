@@ -1,52 +1,43 @@
-"""
-
-great expectations
-the illiad
-beowoulf
-
-
-Candida albicans can facilitate the invasion of Staphylococcus aureus into host tissue by providing a surface for the bacteria to adhere to and be transported into the body
-
-
-"""
+# app.py
 
 import platform
 import getpass
-
 from flask import Flask
 import config
 from blueprints.main import main_bp
 import os
 from datetime import datetime
-
 import random
 import string
+
+import constants # lesser accessed
+# from constants import (
+#     ABOUT_BULLETS,
+#     WARNING_BULLETS,
+#     DEFAULT_OPENAI_MODEL,
+#     APP_MODE_SETTING,
+#     APP_MODE_VALUE_LOCAL_KEYS,
+#     APP_MODE_VALUE_USER_KEYS,
+#     APP_MODE_VALUE_SERVER_KEYS,
+#     APP_MODE_VALUE_INVALID, 
+#     SYSTEM_CONTENT_FILTER,
+#     LOCAL_OPENAI_API_KEY_SETTING,
+#     LOCAL_CLAUDE_API_KEY_SETTING,
+#     USER_OPENAI_API_KEY_SETTING,
+#     USER_CLAUDE_API_KEY_SETTING,
+#     SERVER_OPENAI_API_KEY_SETTING,
+#     SERVER_CLAUDE_API_KEY_SETTING,
+#     )
+
+app = Flask(__name__)
 
 def get_random_alphanumeric(length=16):
     chars = string.ascii_letters + string.digits  # A-Z, a-z, 0-9
     return ''.join(random.choices(chars, k=length))
 
-default_port_C = 5000
-default_port_local_C = 5001
-
-app = Flask(__name__)
-app.config[config.GLOBAL_OPENAI_API_KEY] = ""
-app.config[config.WARNING_BULLETS] = [
-    "This app is running on a dev server, is not hardened, and may be vulnerable.  Do not use high value keys or share private data."
-    "Any keys you enter are saved in your session only.",
-    "Prompts and responses are saved in your session only.",
-    "To be extra safe, after any conversation, click \"Clear and Restart Conversation\" to delete the conversation history from your session",
-    "Note \"query\" options do not save any history.",
-    "Some functionality is still tbd",
-    "If we're acquainted, I/Jeremy would be happy to share one of my keys.",
-    ]
-
-
-
 
 app.secret_key = get_random_alphanumeric()
 app.register_blueprint(main_bp)
-
 
 
 # Log startup time
@@ -54,33 +45,51 @@ with open("logs/sys_log.txt", "a") as f:
     f.write(f"{datetime.now()} App started\n")
 
 
-if 0:
-    print(f"OS: {platform.system()}")           # macOS, Linux, Windows
-    print(f"OS Release: {platform.release()}")  # version number
-    print(f"OS Version: {platform.version()}")  # detailed version
-    print(f"Architecture: {platform.machine()}") # x86_64, arm64, etc.
-    print(f"Username: {getpass.getuser()}")     # current user
-
-
 if __name__ == "__main__":
     os.makedirs("logs", exist_ok=True)
-    port = default_port_C
+    port = 5000
+    app.config[constants.APP_MODE_SETTING] = constants.APP_MODE_VALUE_INVALID
     if getpass.getuser() == 'jeremybloom':
-        port = default_port_local_C
-        
-        # ONLY SOMETIMES USE THE BELOW
-        app.config[config.GLOBAL_OPENAI_API_KEY] = os.environ.get("OPENAI_API_KEY")
-        app.config[config.GLOBAL_CLAUDE_API_KEY] = os.environ.get("ANTHROPIC_API_KEY")
-        
-        #print("openai key:", app.config[config.GLOBAL_OPENAI_API_KEY])
-        #print("claude key:", app.config[config.GLOBAL_CLAUDE_API_KEY])
+        # start dev mode
+        port = 5001
 
+        # set to dev mode
+        app.config[constants.APP_MODE_SETTING] = constants.APP_MODE_VALUE_LOCAL_KEYS
+        # app.config[constants.LOCAL_OPENAI_API_KEY_SETTING] = os.environ.get("OPENAI_API_KEY")
+        # app.config[constants.LOCAL_CLAUDE_API_KEY_SETTING] = os.environ.get("ANTHROPIC_API_KEY")
+
+        # if app.config[constants.LOCAL_OPENAI_API_KEY_SETTING] in ( None, ""):
+        #     print("Starting devmode but no openai key available")
+        # if app.config[constants.LOCAL_CLAUDE_API_KEY_SETTING] in ( None, ""):
+        #     print("Starting devmode but no claude key available")
+    elif True:
+        # allow server keys
+        import boto3
+        from botocore.exceptions import ClientError
+
+        app.config[constants.APP_MODE_SETTING] = constants.APP_MODE_VALUE_SERVER_KEYS
+
+        # try:
+        #     client = boto3.client('secretsmanager', region_name='us-east-1')
+        #     response = client.get_secret_value(SecretId="llms/api_keys")
+        #     secrets = json.loads(response['SecretString'])
+
+        #     app.config[constants.SERVER_OPENAI_API_KEY] = secrets["openai_api_key"]
+        #     app.config[constants.SERVER_CLAUDE_API_KEY] = secrets["anthropic_api_key"]
+
+
+
+        # except ClientError as e:
+        #     # For a list of exceptions thrown, see
+        #     # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        #     raise e
+
+
+    print(f"Mode: {app.config[constants.APP_MODE_SETTING]}")
     app.run(host="0.0.0.0", port=port, debug=True) # debug=True will have app restart if any code changes
 
 
 
-
-# i do not save or record your api key.  But I don't want to be blamed, so use this one...
 
 
 

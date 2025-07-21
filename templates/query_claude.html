@@ -7,18 +7,17 @@
   {% endfor %}
 </ul>
 
-
-<form method="post">
+<form method="post" autocomplete="off">
 	{# nothing #}
 	{#
 	<label for="api_key">Anthropic api key:</label><br>
 	<input type="text" name="api_key" id="api_key"
-	       value="{{ claude_api_key }}"
+	       value="{{ api_key }}"
 	       placeholder="TRASH" style="width: 400px;"><br><br>
 	#}
 
 
-	{% if api_key_saved or session.get('claude_api_key') %}
+	{% if api_key_saved  %}
 	  <p>✅ Anthropic API key saved for this session.
 	    <br><a href="{{ url_for('main.forget_keys') }}" style="margin-left: 1em;">Forget all API keys</a>
 	  </p>
