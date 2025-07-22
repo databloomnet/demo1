@@ -4,6 +4,9 @@ from flask import Blueprint, request, render_template, redirect, url_for, curren
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import json
+import boto3
+from botocore.exceptions import ClientError, NoCredentialsError
+
 
 import openai
 import anthropic
@@ -11,8 +14,14 @@ from flask import session, flash # for session mgmt
 import time
 import config
 import constants
-
+import code_examples
 import uuid
+
+"""
+TODO
+- remove ABOUT_BULLETS
+- remove constants that are no longer used in session tracking keys
+"""
 
 
 from rate_limiter import RateLimiter
@@ -77,7 +86,7 @@ def validate_session():
         if constants.DEBUG:
             print(f"establishing session app mode { session[constants.APP_MODE_SETTING] }")
 
-    if constants.DEBUG:
+    if 0 and constants.DEBUG:
         print(f"session mode {session[constants.APP_MODE_SETTING]} by session id {session[constants.SESSION_ID_SETTING]}")
 
     # handle by session app mode
@@ -101,8 +110,6 @@ def validate_session():
             if constants.DEBUG:
                 print(f"SERVER - adding aws secrets openai and claude keys for { session_id}")
             try:
-                import boto3
-                from botocore.exceptions import ClientError, NoCredentialsError
 
                 client = boto3.client('secretsmanager', region_name='us-east-1')
                 response = client.get_secret_value(SecretId="llms/api_keys")
@@ -151,9 +158,9 @@ def validate_session():
                 dict_of_clade_api_keys[session_id] = ""
 
 
-    if constants.DEBUG:
-        print(f"session id {get_session_id()} keys lengths { len(dict_of_openai_api_keys[get_session_id()]), len(dict_of_openai_api_keys[get_session_id()])}")
-    print("-" * 70)
+    if 0 and constants.DEBUG:
+        print(f"session validated {get_session_id()} keys lengths { len(dict_of_openai_api_keys[get_session_id()]), len(dict_of_openai_api_keys[get_session_id()])}")
+    #print("-" * 70)
 
     return session[constants.SESSION_ID_SETTING]
 
@@ -334,7 +341,8 @@ def query_chatgpt():
                 api_key=api_key,
                 user_prompt=user_prompt,
                 message_footer = message_footer,
-                api_key_saved=api_key_saved)
+                api_key_saved=api_key_saved, 
+                example_code = code_examples.query_chatgpt_code)
 
 
 
@@ -346,7 +354,7 @@ def converse_chatgpt():
 
     response = ""
     error = False
-    intro_title = "This page allows you to ask ChatGPT a single question.  Please note:"
+    intro_title = "This page allows you to hold a conversation with ChatGPT.  Please note:"
     intro_bullets = constants.WARNING_BULLETS
     default_prompt = "Please describe me in a haiku.  You can ask questions, but end each response with a haiku.  Try to use all the info you learn about me in the haiku."
 
@@ -362,8 +370,6 @@ def converse_chatgpt():
     if request.method == "POST":
         if not api_key_saved:
             user_key = request.form.get("api_key", "").strip()
-            print("CHECK -saving new api key")
-            print("user provided key:", user_key)
             if user_key != "":
                 print("saving user provided key as session key")
                 session[config.SESSION_OPENAI_API_KEY] = user_key
@@ -394,10 +400,8 @@ def converse_chatgpt():
                     response_format={"type": "text"}  # works, check if json works...
                 )
 
-                #completion_full = completion
                 response = completion.choices[0].message.content
                 chat_history.append({"role": "assistant", "content": response})
-
                 session["converse_chatgpt_chat_history"] = chat_history
                 session["converse_chatgpt_chat_timestamp"] = datetime.utcnow().isoformat()
 
@@ -439,7 +443,8 @@ def converse_chatgpt():
                 user_prompt=user_prompt,
                 message_footer = message_footer,
                 api_key_saved=api_key_saved,
-                chat_history = chat_history[1:])  # leave out the system message in chat history
+                chat_history = chat_history[1:],  # leave out the system message in chat history
+                example_code = code_examples.converse_chatgpt_code)
 
 
 @main_bp.route("/query_claude", methods=["GET", "POST"])
@@ -532,7 +537,9 @@ def query_claude():
                 api_key=api_key,
                 user_prompt=user_prompt,
                 message_footer = message_footer,
-                api_key_saved=api_key_saved)
+                api_key_saved=api_key_saved,
+                example_code = code_examples.query_claude_code)
+
 
 
 
@@ -553,14 +560,12 @@ def converse_claude():
     if len(chat_history) == 0:
         user_prompt = default_prompt
     else:
-        user_prompt = "any other thoughts?"
+        user_prompt = "any other thoughts? THIS GERTS OVERWRITTEN"
     message_footer = ""
     completion = "" # empty is error
-
     if request.method == "POST":
         if not api_key_saved:
             user_key = request.form.get("api_key", "").strip()
-            print("FIX user provided key:", user_key)
             if user_key != "":
                 print("saving user provided key as session key")
                 session[config.SESSION_CLAUDE_API_KEY] = user_key
@@ -631,8 +636,6 @@ def converse_claude():
             message_footer = "\n\tAnalysis:"
             message_footer += "\n\tResponded with {:d} words in in {:.1f}s".format( len(response.split()), time.time() - t0 )
             message_footer += f"\n\tUsed {completion.usage.input_tokens} prompt tokens and {completion.usage.input_tokens} completion tokens for {completion.usage.input_tokens + completion.usage.output_tokens} total tokens"
-            if constants.DEBUG > 0:
-                print("message_footer:", message_footer)
 
         write_applog(f"converse_claude called with len(prompt) { len(user_prompt) } and len(response) { len(response) }")
 
@@ -645,7 +648,216 @@ def converse_claude():
                 user_prompt=user_prompt,
                 message_footer = message_footer,
                 api_key_saved=api_key_saved,
-                chat_history = chat_history)  # for claude, there is no system message to leave out the system message in chat history
+                chat_history = chat_history,  # for claude, there is no system message to leave out the system message in chat history
+                example_code = code_examples.converse_claude_code)
+
+
+
+
+@main_bp.route("/query_aws_titan", methods=["GET", "POST"])
+def query_aws_titan():
+    # uses rate limiters but does not need keys
+    session_id = validate_session()
+    completion = False  # overwrite with actual
+
+    response = ""       # text response
+    error = False       # pre-call errors
+    intro_title = "This page allows you to ask AWS Titan a single question.  Please note:"
+    intro_bullets = constants.WARNING_BULLETS
+    user_prompt = "In 15 words or less, how can we improve everybody's scientific literacy?"
+
+    message_footer = ""
+
+    if request.method == "POST":        
+        user_prompt = request.form.get("user_prompt", "").strip()
+
+        t0 = time.time()
+
+        if not user_prompt:
+            error = constants.ERROR_EMPTY_PROMPT
+        elif len(user_prompt) > constants.MAX_PROMPT_LENGTH:
+            error = constants.ERROR_MAX_PROMPT_LENGTH_EXCEEDED
+        elif is_rate_limiting_on():
+            error = rate_limiter_exceeded()
+
+        if not error:
+            try:
+                completion = False
+                validate_session()
+                if session[constants.APP_MODE_SETTING] == constants.APP_MODE_VALUE_LOCAL_KEYS:
+                    boto_session = boto3.Session(profile_name="jeremy")
+                    bedrock = boto_session.client("bedrock-runtime", region_name="us-east-1")
+                else:
+                    bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
+
+                body = {
+                    "inputText": constants.SYSTEM_CONTENT_FILTER + "\n" + user_prompt,
+                    "textGenerationConfig": {
+                        "temperature": 0.7,
+                        "maxTokenCount": 256,
+                        "topP": 0.9,
+                        "stopSequences": []
+                    }
+                }
+
+                completion = bedrock.invoke_model(
+                    body=json.dumps(body),
+                    modelId=constants.DEFAULT_AWS_TITAN_MODEL,
+                    contentType="application/json",
+                    accept="application/json"
+                )
+
+                raw_body = completion["body"].read()
+                decoded = json.loads(raw_body)
+                response = decoded.get("results", [{}])[0].get("outputText", "")
+
+                input_tokens = decoded['inputTextTokenCount']
+                output_tokens = decoded.get("results", [{}])[0].get("tokenCount", "")
+
+                if constants.DEBUG > 0:
+                    print("prompt:", user_prompt)
+                    print("response:", response.lstrip())
+
+            except Exception as e:
+                try:
+                    error_json = e.response.json()
+                except:
+                    error = f"Unexpected error: {str(e)}"
+
+        message_footer = ""
+        if completion:
+            message_footer = "\n\tAnalysis:"
+            message_footer += "\n\tResponded with {:d} words at {:} in {:.1f}s".format( len(response.split()), get_hms_pt(), time.time() - t0 )
+            message_footer += "\n\tUsed {:d} prompt tokens and {:d} completion tokens for {:d} total tokens".format(input_tokens,
+                output_tokens, input_tokens + output_tokens)
+        else:
+            message_footer = "error"
+    
+    write_applog(f"query_aws_titan called with len(prompt) { len(user_prompt) } and len(response) { len(response) }")
+
+    return render_template("query_aws_titan.html", 
+                intro_title=intro_title,
+                intro_bullets=intro_bullets,
+                response=response,
+                error=error,
+                user_prompt=user_prompt,
+                message_footer = message_footer,
+                example_code = code_examples.query_aws_titan_code)
+
+
+
+@main_bp.route("/converse_aws_titan", methods=["GET", "POST"])
+def converse_aws_titan():
+    # uses rate limiters but does not need keys
+    session_id = validate_session()
+    
+    response = ""
+    error = False
+    intro_title = "This page allows you to hold a conversation with AWS Titan.  Please note:"
+    intro_bullets = constants.WARNING_BULLETS
+
+    chat_history = session.get("converse_aws_titan_chat_history", [])
+    if len(chat_history) == 0:
+        user_prompt = "When did the first world war start?"
+    else:
+        user_prompt = "Floppy also..."
+
+
+    message_footer = ""
+    completion = False
+
+
+    if request.method == "POST":        
+        user_prompt = request.form.get("user_prompt", "").strip()
+
+        t0 = time.time()
+
+        if not user_prompt:
+            error = constants.ERROR_EMPTY_PROMPT
+        elif len(user_prompt) > constants.MAX_PROMPT_LENGTH:
+            error = constants.ERROR_MAX_PROMPT_LENGTH_EXCEEDED
+        elif is_rate_limiting_on():
+            error = rate_limiter_exceeded()
+
+        if not error:
+            try:
+                completion = False
+                validate_session()
+                if session[constants.APP_MODE_SETTING] == constants.APP_MODE_VALUE_LOCAL_KEYS:
+                    # assume i'm in dev / local keys mode
+                    boto_session = boto3.Session(profile_name="jeremy")
+                    bedrock = boto_session.client("bedrock-runtime", region_name="us-east-1")
+                else:
+                    # assume I'm on ec2 with assumed roles and policy
+                    bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
+
+                #body_input_text = "\n".join( f"{m['role']}: {m['content']}" for m in chat_history )
+                #body_input_text = f"role: user, content: {user_prompt}" + body_input_text
+                #print("body_input_text:", body_input_text)
+
+                chat_history.append({"role": "user", "content": user_prompt})
+                body = {
+                    #"inputText": constants.SYSTEM_CONTENT_FILTER + "\n" + user_prompt,
+                    "inputText": json.dumps(chat_history),
+                    "textGenerationConfig": {
+                        "temperature": 0.7,
+                        "maxTokenCount": 256,
+                        "topP": 0.9,
+                        "stopSequences": []
+                    }
+                }
+
+                completion = bedrock.invoke_model(
+                    body=json.dumps(body),
+                    modelId=constants.DEFAULT_AWS_TITAN_MODEL,
+                    contentType="application/json",
+                    accept="application/json"
+                )
+
+
+                raw_body = completion["body"].read()
+                decoded = json.loads(raw_body)
+                response = decoded.get("results", [{}])[0].get("outputText", "")
+                
+                chat_history.append({"role": "assistant", "content": response})
+                session["converse_aws_titan_chat_history"] = chat_history
+                session["converse_aws_titan_chat_timestamp"] = datetime.utcnow().isoformat()
+
+
+                if constants.DEBUG > 0:
+                    print("prompt:", user_prompt)
+                    print("response:", response.lstrip())
+
+
+                user_prompt = "When did it end?"
+
+                input_tokens = decoded['inputTextTokenCount']
+                output_tokens = decoded.get("results", [{}])[0].get("tokenCount", "")
+            except Exception as e:
+                try:
+                    error_json = e.response.json()
+                except:
+                    error = f"Unexpected error: {str(e)}"
+
+        message_footer = ""
+        if completion:
+            message_footer = "\n\tAnalysis:"
+            message_footer += "\n\tResponded with {:d} words at {:} in {:.1f}s".format( len(response.split()), get_hms_pt(), time.time() - t0 )
+            message_footer += "\n\tUsed {:d} prompt tokens and {:d} completion tokens for {:d} total tokens".format(input_tokens,
+                output_tokens, input_tokens + output_tokens)
+    
+    write_applog(f"converse_aws_titan called with len(prompt) { len(user_prompt) } and len(response) { len(response) }")
+
+    return render_template("converse_aws_titan.html", 
+                intro_title=intro_title,
+                intro_bullets=intro_bullets,
+                response=response,
+                error=error,
+                user_prompt=user_prompt,
+                message_footer = message_footer,
+                chat_history = chat_history,
+                example_code = code_examples.converse_aws_titan_code)
+
 
 
 
@@ -677,10 +889,6 @@ def test():
     return render_template("coming_soon.html", label="test")
 
 
-@main_bp.route("/talk_to_bedrock")
-def talk_to_bedrock():
-    return render_template("coming_soon.html", label="AWS Bedrock")
-
 
 @main_bp.route("/clear_chat_chatgpt")
 def clear_chat_chatgpt():
@@ -688,13 +896,17 @@ def clear_chat_chatgpt():
     session.pop("converse_chatgpt_chat_timestamp", None)
     return redirect(url_for("main.converse_chatgpt"))
 
-
 @main_bp.route("/clear_chat_claude")
 def clear_chat_claude():
     session.pop("converse_claude_chat_history", None)
     session.pop("converse_claude_chat_timestamp", None)
     return redirect(url_for("main.converse_claude"))
 
+@main_bp.route("/clear_chat_aws_titan")
+def clear_chat_aws_titan():
+    session.pop("converse_aws_titan_chat_history", None)
+    session.pop("converse_aws_titan_chat_timestamp", None)
+    return redirect(url_for("main.converse_aws_titan"))
 
 
 

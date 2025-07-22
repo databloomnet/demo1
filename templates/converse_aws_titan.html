@@ -1,0 +1,55 @@
+<h2>Converse AWS Titan</h2>
+
+<p>{{ intro_title }}</p>
+<ul>
+  {% for item in intro_bullets %}
+    <li>{{ item }}</li>
+  {% endfor %}
+</ul>
+
+<form method="post" autocomplete="off">
+
+ 	<p>✅ I'll attempt to use server provided API keys for this session.
+	<br><a href="{{ url_for('main.clear_chat_aws_titan') }}" style="margin-left: 1em;">Clear and Restart Conversation</a>
+	</p>
+
+
+	<label for="user_prompt">Ask AWS Titan: </label><br>
+	<textarea name="user_prompt" id="user_prompt" rows="4" style="width: 600px;" required>{{ user_prompt }}</textarea><br>
+	<button type="submit">Send</button>
+</form>
+
+{% if response %}
+    <h3>Titan Response:</h3>
+    <div style="white-space: pre-wrap; border: 1px solid #ccc; padding: 10px; margin-top: 10px;">
+        {{ response }}
+        {{ message_footer }}
+    </div>
+
+{% endif %}
+
+{% if chat_history %}
+<h3>Conversation History:</h3>
+<div style="font-family: sans-serif; border: 1px solid #ccc; padding: 10px; line-height: 1.4;">
+    {% for entry in chat_history %}
+        <div style="margin-bottom: 1em;">
+            <strong>{{ entry.role.capitalize() }}:</strong>
+            <div>
+                {{ entry.content.strip().replace('\n\n', '\n').replace('\n', '<br>') | safe }}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+
+{% if error %}
+    <h3 style="color: red;">Error:</h3>
+    <div>{{ error }}</div>
+{% endif %}
+
+<h3>Example code</h3>
+<pre><code>{{ example_code | e }}</code></pre>
+
+<p><a href="/">Back to Home</a></p>
+

@@ -1,7 +1,5 @@
 <h2>Converse with ChatGPT</h2>
 
-<p>This session will reset after 1 minute of inactivity (not yet implemented).</p>
-
 <p>{{ intro_title }}</p>
 <ul>
   {% for item in intro_bullets %}
@@ -56,19 +54,6 @@
 {% endif %}
 #}
 
-{#
-{% if chat_history %}
-<h3>Conversation History:</h3>
-<div style="white-space: pre-wrap; font-family: sans-serif; border: 1px solid #ccc; padding: 10px; line-height: 1.4;">
-    {% for entry in chat_history %}
-        <p style="margin: 0 0 0.75em 0;">
-            <strong>{{ entry.role.capitalize() }}:</strong> {{ entry.content }}
-        </p>
-    {% endfor %}
-</div>
-{% endif %}
-#}
-
 {% if chat_history %}
 <h3>Conversation History:</h3>
 <div style="font-family: sans-serif; border: 1px solid #ccc; padding: 10px; line-height: 1.4;">
@@ -92,4 +77,10 @@
     </div>
 {% endif %}
 
-<p style="margin-top: 20px;"><a href="/">← Back to Home</a></p>
+
+<h3>Example code</h3>
+<pre><code>{{ example_code | e }}</code></pre>
+
+<p><a href="/">Back to Home</a></p>
+
+

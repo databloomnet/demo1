@@ -5,7 +5,10 @@
 
 DEFAULT_OPENAI_MODEL = "gpt-3.5-turbo"
 DEFAULT_CLAUDE_MODEL = "claude-opus-4-20250514"
+DEFAULT_AWS_TITAN_MODEL = "amazon.titan-text-express-v1"
 
+
+# no longer used...
 ABOUT_BULLETS = [
                     "I wrote this app to 1) demonstrate how to use LLM services in their python prototypes and 2) convince potential clients that I'm not just a powerpoint jockey.",
                     "Warning: This app is not hardened, is (probably) running on a dev server, and may be vulnerable.",
@@ -27,7 +30,7 @@ WARNING_BULLETS = [
                     # "You may wish to click \"Clear and Restart Conversation\" to delete the conversation history from your session",
                     # "Note \"query\" options do not save any history.",
                     # "This is a experimental learning prototype, and is unsutiable for production use",
-                    "code: https://github.com/databloomnet/demo1"
+                    #"code: https://github.com/databloomnet/demo1"
                 ]
 
 
@@ -46,7 +49,7 @@ SESSION_ID_SETTING = "session_id"
 
 ERROR_NO_KEY = "please enter a key"
 ERROR_EMPTY_PROMPT = "please enter a message"
-MAX_PROMPT_LENGTH = 300
+MAX_PROMPT_LENGTH = 400
 ERROR_MAX_PROMPT_LENGTH_EXCEEDED = "please shorten your prompt"
 
 #RATE_LIMITER_SHORT_EXCEEDED = "throttling (short) - exceeded allowed requests in the short window"
@@ -57,6 +60,7 @@ RATE_LIMITERS = [   {"max": 10, "times": 60,        "name": "r1 - single minute 
                     {"max": 100, "times": 60*60,    "name": "r3 - one hour limiter"},
                     {"max": 200, "times": 60*60*8,  "name": "r4 - eight hour limiter"},
                     {"max": 500, "times": 60*60*24, "name": "r5 - one day limiter"} ]
+
 
 ERROR_RATE_LIMITER_PAUSE = "rate limiting active"
 

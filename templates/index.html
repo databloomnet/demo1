@@ -1,20 +1,75 @@
-<h2>Jeremy Bloom's Example App</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Jeremy's LLM Demo App</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2rem;
+            line-height: 1.2;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 1rem;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        a {
+            color: #1a73e8;
+        }
+    </style>
+</head>
+<body>
+
+    <h3>About This App</h3>
+    <p>
+        I (Jeremy Bloom) built this LLM Demo App to demonstrate three things:
+    </p>
+    <ol>
+        <li>How easy it is to prototype with large language models (LLMs) in Python</li>
+        <li>A hands-on way to brush up on my AWS and Python skills</li>
+        <li>And (hopefully) to convince clients or employers that I do more than just build slide decks</li>
+    </ol>
+
+    <p>This app lets you experiment with several LLM services:</p>
+    <ul>
+        <li>ChatGPT via OpenAI’s <code>openai</code> Python module</li>
+        <li>Claude via Anthropic’s <code>anthropic</code> Python module</li>
+        <li>Titan via AWS Bedrock</li>
+        <li>…?</li>
+    </ul>
+
+    <p>You can run the app in two modes:</p>
+    <ul>
+        <li><code>server_keys</code> – Keys are provided by me (with built-in rate limits)</li>
+        <li><code>user_keys</code> – You provide your own API keys (removes rate limits for ChatGPT & Claude, not avail for AWS)</li>
+    </ul>
+
+    <strong>Caveats</strong>
+    <ul>
+        <li>This is a <strong>prototype</strong>, likely running on a development server - it's not hardened or secured for production.</li>
+        <li>While the app doesn’t store any keys, prompts, or responses, they <strong>may be visible</strong> in logs, debugging sessions, or edge-case errors.</li>
+        <li>The source code is here: <a href="https://github.com/databloomnet/demo1" target="_blank">
+            github.com/databloomnet/demo1
+        </a>
+    </li>
+    </ul>
 
 
-<p>Welcome to my example app.  Some things to know:</p>
-<ul>
-  {% for item in about_bullets %}
-    <li>{{ item }}</li>
-  {% endfor %}
-</ul>
+    <h3>Things you can do...</h3>
 
 
-
-<form action="/submit_note" method="post">
-    <label>Leave a note in the app log:</label>
-    <input type="text" name="note" required>
-    <button type="submit">Submit</button>
-</form>
+<div style="margin-left: 20px;">
+    <form action="/submit_note" method="post" style="display: inline;">
+        <label for="note">Leave a note in the app log:</label>
+        <input type="text" id="note" name="note" required style="margin-left: 10px;">
+        <button type="submit" style="margin-left: 5px;">Submit Note</button>
+    </form>
+</div>
 
 <br>
 <span style="margin-left: 20px;">Logs:</span>
@@ -26,7 +81,7 @@
     <button type="submit">View App Log</button>
 </form>
 
-<form action="/delete_sys_log" method="post" style="display:inline;margin-left: 30px;">
+<form action="/delete_sys_log" method="post" style="display:inline;margin-left: 10px;">
     <button type="submit" onclick="return confirm('Delete system log?')">Delete System Log</button>
 </form>
 
@@ -36,22 +91,32 @@
 <br><br>
 
 
-<br>
+
 
 <span style="margin-left: 20px;">Mode: <span style="font-family: monospace;">{{ current_app_mode }}</span></span>
 
-<form action="/mode_to_user_keys" method="post" style="display:inline; margin-left: 30px;">
-    <button type="submit" onclick="return confirm('Use your own keys (no rate limiting)')">Provide your own keys</button>
+<form action="/mode_to_server_keys" method="post" style="display:inline; margin-left: 10px;">
+    <button type="submit" onclick="return confirm('Use Jeremy\'s but adds rate limiting')">server_keys</button>
 </form>
 
-<form action="/mode_to_server_keys" method="post" style="display:inline; margin-left: 10px;">
-    <button type="submit" onclick="return confirm('Use Jeremy\'s but adds rate limiting')">Use Jeremy's keys</button>
+<form action="/mode_to_user_keys" method="post" style="display:inline; margin-left: 30px;">
+    <button type="submit" onclick="return confirm('Use your own keys (no rate limiting)')">user_keys</button>
 </form>
+
+
+
+<br><br>
+<span style="margin-left: 20px;">Try OpenAI API:</span>
+<form action="/query_chatgpt" method="get" style="display:inline; margin-left: 10px;">
+    <button type="submit">Query ChatGPT</button>
+</form>
+<form action="/converse_chatgpt" method="get" style="display:inline; margin-left: 10px;">
+    <button type="submit">Converse with ChatGPT</button>
+</form>
+
 
 <br><br>
 <span style="margin-left: 20px;">Try Anthropic API:</span>
-
-
 <form action="/query_claude" method="get" style="display:inline; margin-left: 10px;">
     <button type="submit">Query Claude</button>
 </form>
@@ -60,23 +125,17 @@
     <button type="submit">Converse with Claude</button>
 </form>
 
-<br><br>
-<span style="margin-left: 20px;">Try OpenAI API:</span>
 
-<form action="/query_chatgpt" method="get" style="display:inline; margin-left: 10px;">
-    <button type="submit">Query ChatGPT</button>
-</form>
-
-
-<form action="/converse_chatgpt" method="get" style="display:inline; margin-left: 10px;">
-    <button type="submit">Converse with ChatGPT</button>
-</form>
 
 <br><br>
-<span style="margin-left: 20px;">Try AWS Bedrock:</span>
-
-
-
-<form action="/talk_to_bedrock" method="get" class="inline-button-form">
-    <button type="submit">Talk to AWS Bedrock</button>
+<span style="margin-left: 20px;">Try AWS Bedrock Titan:</span>
+<form action="/query_aws_titan" method="get" style="display:inline; margin-left: 10px;">
+    <button type="submit">Query AWS Titan</button>
 </form>
+
+<form action="/converse_aws_titan" method="get" style="display:inline; margin-left: 10px;">
+    <button type="submit">Converse with AWS Titan</button>
+</form>
+
+</body>
+</html>

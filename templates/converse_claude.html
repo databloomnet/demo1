@@ -1,7 +1,5 @@
 <h2>Converse with Claude</h2>
 
-<p>This session will reset after 1 minute of inactivity (not yet implemented).</p>
-
 <p>{{ intro_title }}</p>
 <ul>
   {% for item in intro_bullets %}
@@ -92,4 +90,7 @@
     </div>
 {% endif %}
 
-<p style="margin-top: 20px;"><a href="/">← Back to Home</a></p>
+<h3>Example code</h3>
+<pre><code>{{ example_code | e }}</code></pre>
+
+<p><a href="/">Back to Home</a></p>

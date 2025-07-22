@@ -1,4 +1,4 @@
-<h2>Query ChatGPT</h2>
+<h2>Query AWS Titan</h2>
 
 <p>{{ intro_title }}</p>
 <ul>
@@ -8,24 +8,17 @@
 </ul>
 
 <form method="post" autocomplete="off">
-	{% if api_key_saved  %}
-	  <p>✅ OpenAI API key saved for this session.
-	    <br><a href="{{ url_for('main.forget_keys') }}" style="margin-left: 1em;">Forget all API keys</a>
-	  </p>
-	  <!-- Hide input box to prevent access -->
-	{% else %}
-	  <label for="api_key">OpenAI API key:</label><br>
-	  <input type="password" name="api_key" id="api_key" placeholder="sk-..." style="width: 400px;" required><br><br>
-	{% endif %}
+
+ 	<p>✅ I'll attempt to use server provided API keys for this session.
 
 
-	<label for="user_prompt">Ask ChatGPT: </label><br>
+	<label for="user_prompt">Ask AWS Titan: </label><br>
 	<textarea name="user_prompt" id="user_prompt" rows="4" style="width: 600px;" required>{{ user_prompt }}</textarea><br>
 	<button type="submit">Send</button>
 </form>
 
 {% if response %}
-    <h3>ChatGPT Response:</h3>
+    <h3>Titan Response:</h3>
     <div style="white-space: pre-wrap; border: 1px solid #ccc; padding: 10px; margin-top: 10px;">
         {{ response }}
         {{ message_footer }}
